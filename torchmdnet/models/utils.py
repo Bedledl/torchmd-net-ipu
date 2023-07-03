@@ -339,19 +339,31 @@ class ExpNormalSmearing(nn.Module):
         )
 
 
-class ShiftedSoftplus(nn.Module):
+class ShiftedSoftplusNotIPUCompatible(nn.Module):
     r"""Applies the ShiftedSoftplus function :math:`\text{ShiftedSoftplus}(x) = \frac{1}{\beta} *
     \log(1 + \exp(\beta * x))-\log(2)` element-wise.
 
     SoftPlus is a smooth approximation to the ReLU function and can be used
     to constrain the output of a machine to always be positive.
     """
+
     def __init__(self):
         super(ShiftedSoftplus, self).__init__()
         self.shift = torch.log(torch.tensor(2.0)).item()
 
     def forward(self, x):
         return F.softplus(x) - self.shift
+
+
+class ShiftedSoftplus(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.shift = torch.log(torch.tensor(2.0)).item()
+
+    def forward(self, x):
+        u = torch.log1p(torch.exp(-x.sign() * x))
+        v = torch.clamp_min(x, 0.0)
+        return u + v - self.shift
 
 
 class CosineCutoff(nn.Module):
