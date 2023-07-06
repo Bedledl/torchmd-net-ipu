@@ -70,7 +70,7 @@ class TorchMD_GN(nn.Module):
         cutoff_lower=0.0,
         cutoff_upper=5.0,
         max_z=100,
-        max_num_neighbors=32,
+        max_num_neighbors=5,
         aggr="add",
         dtype=torch.float32
     ):

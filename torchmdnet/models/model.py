@@ -27,6 +27,7 @@ def create_model(args, prior_model=None, mean=None, std=None):
     """
     args["dtype"] = "float32" if "dtype" not in args else args["dtype"]
     args["dtype"] = dtype_mapping[args["dtype"]] if isinstance(args["dtype"], str) else args["dtype"]
+    args["max_num_neighbors"] = 5
     shared_args = dict(
         hidden_channels=args["embedding_dimension"],
         num_layers=args["num_layers"],

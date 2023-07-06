@@ -404,7 +404,7 @@ class Distance(nn.Module):
         self,
         cutoff_lower,
         cutoff_upper,
-        max_num_neighbors=32,
+        max_num_neighbors=5,
         return_vecs=False,
         loop=False,
     ):
