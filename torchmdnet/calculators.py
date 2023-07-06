@@ -33,9 +33,10 @@ class External:
         self.model = load_model(netfile, device=device, derivative=True)
         self.device = device
         self.n_atoms = embeddings.size(1)
+        self.batch_size = embeddings.size(0)
         self.embeddings = embeddings.reshape(-1).to(device)
-        self.batch = torch.arange(embeddings.size(0), device=device).repeat_interleave(
-            embeddings.size(1)
+        self.batch = torch.arange(self.batch_size, device=device).repeat_interleave(
+            self.n_atoms
         )
         self.ipu = ipu
         self.model.eval()
@@ -62,7 +63,7 @@ class External:
 
     def calculate(self, pos, box):
         pos = pos.to(self.device).type(torch.float32).reshape(-1, 3)
-        energy, forces = self.model(self.embeddings, pos, self.batch)
+        energy, forces = self.model(self.embeddings, pos, self.batch, self.batch_size)
 
         return self.output_transformer(
             energy.detach(), forces.reshape(-1, self.n_atoms, 3).detach()

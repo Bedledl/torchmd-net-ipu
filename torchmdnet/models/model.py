@@ -234,6 +234,7 @@ class TorchMD_Net(nn.Module):
         z: Tensor,
         pos: Tensor,
         batch: Optional[Tensor] = None,
+        batch_size: int = None,
         q: Optional[Tensor] = None,
         s: Optional[Tensor] = None,
         extra_args: Optional[Dict[str, Tensor]] = None
@@ -243,6 +244,8 @@ class TorchMD_Net(nn.Module):
             z (Tensor): Atomic numbers of the atoms in the molecule. Shape (N,).
             pos (Tensor): Atomic positions in the molecule. Shape (N, 3).
             batch (Tensor, optional): Batch indices for the atoms in the molecule. Shape (N,).
+            batch_size (int, optional): Batch size, usually max(batch), parameter necessary f
+                or deterministic calculation on IPU
             q (Tensor, optional): Atomic charges in the molecule. Shape (N,).
             s (Tensor, optional): Atomic spins in the molecule. Shape (N,).
             extra_args (Dict[str, Tensor], optional): Extra arguments to pass to the prior model.
@@ -270,7 +273,7 @@ class TorchMD_Net(nn.Module):
                 x = prior.pre_reduce(x, z, pos, batch, extra_args)
 
         # aggregate atoms
-        x = self.output_model.reduce(x, batch)
+        x = self.output_model.reduce(x, batch, batch_size)
 
         # shift by data mean
         if self.mean is not None:
