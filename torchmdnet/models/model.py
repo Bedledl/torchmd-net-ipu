@@ -251,7 +251,7 @@ class TorchMD_Net(nn.Module):
             extra_args (Dict[str, Tensor], optional): Extra arguments to pass to the prior model.
         """
 
-        assert z.dim() == 1 and z.dtype == torch.long
+        assert z.dim() == 1 and z.dtype in [torch.long, torch.int]
         batch = torch.zeros_like(z) if batch is None else batch
 
         if self.derivative:
