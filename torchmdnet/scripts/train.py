@@ -166,7 +166,7 @@ def main():
     trainer = pl.Trainer(
         strategy=DDPStrategy(find_unused_parameters=False),
         max_epochs=args.num_epochs,
-        gpus=args.ngpus,
+        accelerator='cpu',
         num_nodes=args.num_nodes,
         default_root_dir=args.log_dir,
         auto_lr_find=False,
@@ -180,6 +180,9 @@ def main():
     trainer.fit(model, data)
 
     # run test set after completing the fit
+    trainer.checkpoint_callback.best_model_path = "/mnt/masterarbeit/torchmd-protein-thermodynamics/Tutorials/train_light_2/cccccc"
+    print("---------------------------------------------------------------------------")
+    print(trainer.checkpoint_callback.best_model_path)
     model = LNNP.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
     trainer = pl.Trainer(logger=_logger)
     trainer.test(model, data)
