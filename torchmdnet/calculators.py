@@ -60,7 +60,9 @@ class External:
 
             self.model = self.model.to(torch.float32)
             self.embeddings = self.embeddings.to(torch.int32)
-            self.model = poptorch.inferenceModel(self.model)
+            opts = poptorch.Options()
+            opts.enableExecutableCaching("/mnt/masterarbeit/torchmd-protein-thermodynamics/Tutorials/exec_cache")
+            self.model = poptorch.inferenceModel(self.model, opts)
 
         if profiling:
             self.profiler = profiler.profile(with_stack=True, profile_memory=True)
