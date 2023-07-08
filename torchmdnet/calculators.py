@@ -27,7 +27,7 @@ class External:
     forces, and return the transformed energy and the transformed forces.
     """
 
-    def __init__(self, netfile, embeddings, device="cpu", output_transform=None):
+    def __init__(self, netfile, embeddings, device="cpu", output_transform=None, ipu=False):
         self.model = load_model(netfile, device=device, derivative=True)
         self.device = device
         self.n_atoms = embeddings.size(1)
@@ -35,6 +35,7 @@ class External:
         self.batch = torch.arange(embeddings.size(0), device=device).repeat_interleave(
             embeddings.size(1)
         )
+        self.ipu = ipu
         self.model.eval()
 
         if not output_transform:
@@ -46,6 +47,13 @@ class External:
             self.output_transformer = tranforms[output_transform]
         else:
             self.output_transformer = eval(output_transform)
+
+        if self.ipu:
+            import poptorch
+
+            self.model = self.model.to(torch.float32)
+            self.embeddings = self.embeddings.to(torch.int32)
+            self.model = poptorch.inferenceModel(self.model)
 
     def calculate(self, pos, box):
         pos = pos.to(self.device).type(torch.float32).reshape(-1, 3)
