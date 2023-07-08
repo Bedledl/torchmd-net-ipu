@@ -421,7 +421,7 @@ class Distance(nn.Module):
         edge_index = knn_graph(pos, self.max_num_neighbors, batch, self.loop)
 
         edge_vec = pos[edge_index[0]] - pos[edge_index[1]]
-        edge_weight = torch.norm(edge_vec, dim=-1)
+        edge_weight = torch.linalg.norm(edge_vec, dim=-1)
 
         return edge_index, edge_weight, None
 
