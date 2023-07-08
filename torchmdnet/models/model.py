@@ -288,19 +288,4 @@ class TorchMD_Net(nn.Module):
             for prior in self.prior_model:
                 y = prior.post_reduce(y, z, pos, batch, extra_args)
 
-        # compute gradients with respect to coordinates
-        if self.derivative:
-            grad_outputs: List[Optional[torch.Tensor]] = [torch.ones_like(y)]
-            dy = grad(
-                [y],
-                [pos],
-                grad_outputs=grad_outputs,
-                create_graph=True,
-                retain_graph=True,
-            )[0]
-            if dy is None:
-                raise RuntimeError("Autograd returned None for the force prediction.")
-
-            return y, -dy
-        # TODO: return only `out` once Union typing works with TorchScript (https://github.com/pytorch/pytorch/pull/53180)
-        return y, None
+        return y

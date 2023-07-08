@@ -1,4 +1,8 @@
+from typing import List, Optional
+
 import torch
+from torch.autograd import grad
+
 from torchmdnet.models.model import load_model
 
 import torch.autograd.profiler as profiler
@@ -63,7 +67,17 @@ class External:
 
     def calculate(self, pos, box):
         pos = pos.to(self.device).type(torch.float32).reshape(-1, 3)
-        energy, forces = self.model(self.embeddings, pos, self.batch, self.batch_size)
+        energy = self.model(self.embeddings, pos, self.batch, self.batch_size)
+        grad_outputs: List[Optional[torch.Tensor]] = [torch.ones_like(energy)]
+        forces = grad(
+            [energy],
+            [pos],
+            grad_outputs=grad_outputs,
+            create_graph=True,
+            retain_graph=True,
+        )[0]
+        if forces is None:
+            raise RuntimeError("Autograd returned None for the force prediction.")
 
         return self.output_transformer(
             energy.detach(), forces.reshape(-1, self.n_atoms, 3).detach()
