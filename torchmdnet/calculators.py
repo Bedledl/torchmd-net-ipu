@@ -1,6 +1,8 @@
 import torch
 from torchmdnet.models.model import load_model
 
+import torch.autograd.profiler as profiler
+
 # dict of preset transforms
 tranforms = {
     "eV/A -> kcal/mol/A": lambda energy, forces: (
@@ -27,7 +29,7 @@ class External:
     forces, and return the transformed energy and the transformed forces.
     """
 
-    def __init__(self, netfile, embeddings, device="cpu", output_transform=None, ipu=False):
+    def __init__(self, netfile, embeddings, device="cpu", output_transform=None, ipu=False, profiling=False):
         self.model = load_model(netfile, device=device, derivative=True)
         self.device = device
         self.n_atoms = embeddings.size(1)
@@ -55,6 +57,9 @@ class External:
             self.embeddings = self.embeddings.to(torch.int32)
             self.model = poptorch.inferenceModel(self.model)
 
+        if profiling:
+            self.profiler = profiler.profile(with_stack=True, profile_memory=True)
+
     def calculate(self, pos, box):
         pos = pos.to(self.device).type(torch.float32).reshape(-1, 3)
         energy, forces = self.model(self.embeddings, pos, self.batch)
@@ -62,3 +67,10 @@ class External:
         return self.output_transformer(
             energy.detach(), forces.reshape(-1, self.n_atoms, 3).detach()
         )
+
+    def print_profiling_results(self):
+        if not self.profiler:
+            print("Profiling was not activated. Use 'profiling=True' when initializing the 'External' Module")
+            return
+
+        print(self.profiler.key_averages(group_by_stack_n=5).table(sort_by='self_cpu_time_total'))
